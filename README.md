@@ -1,4 +1,4 @@
-# My Pi Memory
+# Curated memory for pi agents.
 
 > This is 100% vibe-coded and still under experimentation.
 > In fact, the only part I read is this block that I am writing.
@@ -12,6 +12,7 @@ User-reviewed project memories and global preferences for Pi. Two model tools pr
 ## Try it
 
 Requires Node.js 22+, Git, and Pi 1.x. The initial runtime targets Linux/macOS filesystems and terminals.
+Still not with an elegant solution for containers and sandboxes
 
 ```sh
 npm ci
@@ -21,7 +22,7 @@ pi -e ./index.ts
 To load it in every project, install the package by its absolute directory:
 
 ```sh
-pi install /absolute/path/to/my-pi-memory
+pi install /absolute/path/to/pi-curated-memory
 ```
 
 Ask Pi to remember a stable preference or project decision. It can call `memory_write`, which saves a candidate and quietly notifies you. Approval is never automatic.
