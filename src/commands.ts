@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { editMemory } from "./editor.ts";
 import { openMemory } from "./runtime.ts";
 import { search } from "./search.ts";
+import { readUsage, recentScore } from "./usage.ts";
 import type { Entry, Listing, MemoryStore } from "./store.ts";
 import type { Project } from "./project.ts";
 
@@ -12,12 +13,19 @@ const help = "Use /memory review [skipped], /memory manage [search text], or /me
 function report(listing: Listing, ctx: ExtensionCommandContext) {
   if (listing.warnings.length) ctx.ui.notify(`${listing.warnings.length} memory storage warning(s). Use /memory status for details.`, "warning");
 }
-function card(entry: Entry): string {
+async function card(entry: Entry, usagePath: string): Promise<string> {
   const { memory, scope } = entry;
   const preview = memory.body.split("\n").slice(0, 8).join("\n").slice(0, 700);
   const remaining = preview.length < memory.body.length ? "\n… Open in editor for full text." : "";
   const location = scope === "candidate" ? `Candidate · suggests ${memory.suggestedScope}\nProject: ${memory.projectRoot}` : scope === "local" ? "Local memory" : "Global memory";
-  return `${location}\n${memory.title}\n${memory.description}\n\n${preview}${remaining}`;
+  let usageText = "";
+  if (scope !== "candidate") {
+    try {
+      const usage = (await readUsage(usagePath))[memory.id];
+      usageText = `\n\nAccesses: ${usage?.accessCount ?? 0} · Last access: ${usage?.lastAccess ?? "never"} · Recent score: ${usage ? recentScore(usage).toFixed(2) : "0.00"}`;
+    } catch { usageText = "\n\nUsage statistics unavailable; see /memory status."; }
+  }
+  return `${location}\n${memory.title}\n${memory.description}\n\n${preview}${remaining}${usageText}`;
 }
 
 async function refresh(entry: Entry, store: MemoryStore, project: Project): Promise<Entry | undefined> {
@@ -36,7 +44,7 @@ async function review(store: MemoryStore, project: Project, skipped: boolean, ct
   for (let i = 0; i < entries.length; i++) {
     let entry: Entry | undefined = entries[i];
     while (entry) {
-      const action = await ctx.ui.select(`Memory ${i + 1}/${entries.length}\n${card(entry)}`, [
+      const action = await ctx.ui.select(`Memory ${i + 1}/${entries.length}\n${await card(entry, store.config.usagePath)}`, [
         "Add locally", "Promote globally", "Forget", "Skip", "Edit in $EDITOR", "Close",
       ]);
       if (!action || action === "Close") return;
@@ -85,7 +93,7 @@ async function manage(store: MemoryStore, project: Project, initialQuery: string
       }
       let entry: Entry | undefined = entries[labels.indexOf(selection)];
       while (entry) {
-        const action = await ctx.ui.select(card(entry), [
+        const action = await ctx.ui.select(await card(entry, store.config.usagePath), [
           "Edit in $EDITOR", scope === "local" ? "Promote globally" : "Demote to this project", "Delete", "Back",
         ]);
         if (!action || action === "Back") break;
@@ -133,15 +141,19 @@ export async function runMemoryCommand(args: string, ctx: ExtensionCommandContex
       store.list("candidate", project), store.list("local", project), store.list("global", project),
     ]);
     const candidateDir = join(config.globalRoot, "candidates"), globalDir = join(config.globalRoot, "approved");
+    const usageWarnings: string[] = [];
+    try { await readUsage(config.usagePath); }
+    catch (error) { usageWarnings.push(`Usage log: ${(error as Error).message}`); }
     return [
       `Config: ${config.configPath}`,
+      `Usage log: ${config.usagePath} (${await availability(config.usagePath)})`,
       `Git exclusion: ${config.gitExclude ? "on (already tracked files remain tracked)" : "off"}`,
       `Project: ${project.root}`,
       `Local: ${project.localDir} (${await availability(project.localDir)}) — ${local.entries.length} memories`,
       `Global: ${globalDir} (${await availability(globalDir)}) — ${global.entries.length} memories`,
       `Candidates: ${candidateDir} (${await availability(candidateDir)}) — ${candidates.entries.filter(entry => entry.memory.state === "pending").length} pending, ${candidates.entries.filter(entry => entry.memory.state === "skipped").length} skipped`,
       "Storage persists only as long as its directory/volume.",
-      ...[...candidates.warnings, ...local.warnings, ...global.warnings].slice(0, 20),
+      ...[...usageWarnings, ...candidates.warnings, ...local.warnings, ...global.warnings].slice(0, 20),
     ].join("\n");
   }
   if (command === "review") await review(store, project, rest[0] === "skipped", ctx);

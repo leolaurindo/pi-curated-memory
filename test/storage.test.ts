@@ -9,10 +9,12 @@ import { fixture, draft, exec } from "./helpers.ts";
 test("global config defaults, path overrides, and invalid preferences", async t => {
   const { root } = await fixture(t);
   assert.equal((await loadConfig(root)).globalRoot, join(root, "memory"));
+  assert.equal((await loadConfig(root)).usagePath, join(root, "memory-usage.json"));
   assert.equal((await loadConfig(root)).gitExclude, true);
   await writeFile(join(root, "memory.json"), JSON.stringify({ globalRoot: "dotfiles/memories", gitExclude: false }));
   const config = await loadConfig(root);
   assert.equal(config.globalRoot, join(root, "dotfiles/memories"));
+  assert.equal(config.usagePath, join(root, "memory-usage.json"));
   assert.equal(config.gitExclude, false);
   await writeFile(join(root, "memory.json"), '{"gitExclude":"false"}');
   await assert.rejects(loadConfig(root), /must be boolean/);

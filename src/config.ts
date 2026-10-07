@@ -5,6 +5,7 @@ import { isMissing } from "./files.ts";
 
 export interface Config {
   configPath: string;
+  usagePath: string;
   globalRoot: string;
   gitExclude: boolean;
 }
@@ -30,5 +31,5 @@ export async function loadConfig(agentDir = process.env.PI_CODING_AGENT_DIR || j
   let globalRoot = (input.globalRoot as string | undefined) ?? join(agentDir, "memory");
   if (globalRoot === "~" || globalRoot.startsWith("~/")) globalRoot = join(homedir(), globalRoot.slice(2));
   if (!isAbsolute(globalRoot)) globalRoot = resolve(agentDir, globalRoot);
-  return { configPath, globalRoot, gitExclude: input.gitExclude !== false };
+  return { configPath, usagePath: join(agentDir, "memory-usage.json"), globalRoot, gitExclude: input.gitExclude !== false };
 }

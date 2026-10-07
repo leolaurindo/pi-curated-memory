@@ -14,7 +14,7 @@ export async function fixture(t: TestContext, git = false) {
   const cwd = join(root, "project");
   await mkdir(cwd);
   if (git) await exec("git", ["init", "-q", cwd]);
-  const config = { configPath: join(root, "memory.json"), globalRoot: join(root, "global"), gitExclude: true };
+  const config = { configPath: join(root, "memory.json"), usagePath: join(root, "memory-usage.json"), globalRoot: join(root, "global"), gitExclude: true };
   return { root, cwd, config, store: new MemoryStore(config), project: await resolveProject(cwd) };
 }
 export const draft = { title: "Test command", description: "How to run project tests", body: "Run npm test before finishing changes." };

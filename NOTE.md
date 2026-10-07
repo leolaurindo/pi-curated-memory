@@ -7,7 +7,8 @@ Build a memory plugin inspired by [`inspiration/packages/pi-memory`](inspiration
 Use readable Markdown files with a small metadata header, not SQLite. Users can edit files externally and version global storage through dotfiles.
 
 ```text
-~/.pi/agent/memory.json  # global plugin configuration only
+~/.pi/agent/memory.json        # global plugin configuration only
+~/.pi/agent/memory-usage.json  # aggregate recall statistics, keyed by memory ID
 ~/.pi/agent/memory/
   candidates/          # pending and skipped candidates from all projects
   approved/            # approved global memories
@@ -59,6 +60,18 @@ Use a very small system instruction:
 - Keep retrieval replaceable; do not start with embeddings.
 - Ordinary grep may find approved local memories. This is fine: recall is a focused interface, not exclusive access or a security boundary.
 - Deduplicate results by memory ID to avoid context bloat after interrupted moves.
+
+## Usage statistics
+
+- Keep one global aggregate JSON log at `~/.pi/agent/memory-usage.json`, respecting `PI_CODING_AGENT_DIR`, independently of the configured memory storage root.
+- Per ID, record `accessCount`, `lastAccess`, and `recentScore`. Count each returned memory once per recall after limits/deduplication, regardless of local/global scope; preserve history across promotion/demotion.
+- Do not count candidates, scanned/unmatched files, direct reads, or browsing. No-result calls do not update/create the log.
+- Use exponential decay with a fixed 30-day half-life: on access, `savedScore * 0.5^(elapsedDays / 30) + 1`; on consultation, use the same decay without adding a point. Clamp elapsed time to nonnegative and keep last-access timestamps monotonic.
+- The saved score is anchored at `lastAccess`; no periodic worker is needed. Show its current decayed value on approved-memory cards and the log path in status.
+- Store only IDs and numeric/time statistics, not titles, bodies, queries, paths, or a full event history. Preserve aggregate records when a memory is deleted.
+- Do not use statistics for ranking or inject them into model results/prompts.
+- Atomic writes and cross-process locking protect increments. Failed logging must not fail recall; warn once per interactive extension runtime. Preserve malformed files instead of silently resetting them.
+- Recall is no longer declared read-only/idempotent because of these bookkeeping writes; approved memories remain unchanged.
 
 ## User commands and UI
 
@@ -130,12 +143,21 @@ Feature sequence (implemented):
 - `npm test`: all 21 tests passed. Coverage includes bounded recall text and failed writes producing no success notice.
 - `npm pack --dry-run`: passed; the package includes the extension, source modules, and README, not inspiration/test fixtures.
 - Native Pi TUI smoke check passed in an isolated pseudo-terminal: startup notice, candidate review, actual external editor launch/reload, local approval, status, and orderly exit. No model request or real-user configuration changes were needed.
-- Current size: 689 production TypeScript lines; 462 test/helper lines (including blank lines).
+- Initial v1 size: 689 production TypeScript lines; 462 test/helper lines (including blank lines).
 - Usage/configuration and reliability boundaries are documented in `README.md`.
 - Candidate destinations are absolute paths: host/container local approval requires that project path to be accessible. There is no automatic host/container translation. Approved global memories have no such origin dependency.
 - Initial runtime is verified on Linux; macOS/Windows and an actual Docker deployment are not verified. The plain-file storage itself remains portable.
 - Locking coordinates plugin mutations, not arbitrary external writers. Cross-store moves are copy-before-delete and retryable, not a single cross-filesystem transaction; temporary duplicates are deduplicated during recall.
 - No separate extraction worker was built: the accepted writing-tool design replaces it. Built-in dialogs replace a bespoke flash-card component. External edits use validated temporary drafts rather than exposing the authoritative file to incomplete editor saves.
+
+### Usage tracking follow-up
+
+- Implemented ID-keyed aggregate logging, access-time and read-time exponential decay, and best-effort integration into recall after limits/ID deduplication. No ranking change or extra model calls.
+- Management cards show current usage statistics without counting browsing; status shows the log path and parse errors. This is a small UI addition so the decayed score can be inspected without interpreting the saved timestamp manually.
+- No new configuration keys/dependencies or background worker. The log stays beside global Pi config, not inside `globalRoot`; container persistence must include this separate path if desired.
+- Validation: `npm run check` and all 29 tests pass. Focused tests cover half-life math, monotonic timestamps, exact per-call counts, separate-process increments, corrupt-log preservation, result limits/deduplication, promotion continuity, and nonfatal logging failures. Management tests confirm browsing displays decayed scores without rewriting/counting usage.
+- Native Pi PTY smoke check passed with the usage statistics shown on an approved-memory card, alongside review, external editing, approval, status, and orderly exit. All checks used isolated directories, not real user memories.
+- The installed local package needs only `/reload` to load this update. No installation/settings changes were made for this feature.
 
 Update this section with important design changes and verification evidence as work continues.
 

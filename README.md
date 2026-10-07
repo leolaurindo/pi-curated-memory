@@ -115,6 +115,36 @@ Pi receives only short tool guidelines, not an automatically injected memory dum
 
 Approved local files may be found by grep. Recall adds convenience and approval filtering, not exclusive access or a security boundary. Memory text is reference data, not trusted instructions. Do not propose secrets or temporary details; the plugin cannot guarantee sensitive-data detection.
 
+## Usage statistics
+
+The plugin keeps an aggregate log at `~/.pi/agent/memory-usage.json`, respecting `PI_CODING_AGENT_DIR`. This path stays in the Pi agent directory even when `globalRoot` is overridden.
+
+```json
+{
+  "9e8854eb-4868-4e67-9ab6-afed9df085cc": {
+    "accessCount": 12,
+    "lastAccess": "2026-07-17T14:30:00.000Z",
+    "recentScore": 3.8
+  }
+}
+```
+
+- Count each memory ID once per recall result set, after search limits and deduplication. Candidates, unmatched/scanned files, direct filesystem reads, and UI browsing do not count. No-result recalls do not create/update the log.
+- Both local and global memories use the same ID-keyed log. Promotion/demotion keeps their history; deleting a memory does not erase its aggregate statistics.
+- The log contains only IDs, counts, timestamps, and scores—not memory contents, titles, queries, or repository paths. It is not an append-only event history.
+- `recentScore` is saved at `lastAccess`. Its half-life is fixed at **30 days**:
+
+```text
+scoreOnAccess = savedScore × 0.5^(elapsedDays / 30) + 1
+scoreNow      = savedScore × 0.5^(elapsedDays / 30)
+```
+
+No timer is needed. `/memory manage` displays the current decayed score, access count, and last access on approved-memory cards without writing/counting a new access. `/memory status` shows the log path and reports malformed logs. Scores do **not** affect recall ranking or enter the model's memory results.
+
+Log updates use atomic writes and cross-process locks. Logging failures do not fail recall; interactive Pi warns once per extension runtime. Corrupt logs remain untouched—repair/remove the file to resume tracking. Recall is declared non-read-only and non-idempotent because it now updates statistics, but it never changes approved memories.
+
+Persist the Pi agent directory or this log separately if you want container usage statistics to survive; mounting only `globalRoot` does not include the log.
+
 ## Containers
 
 No container detection, mount inspection, or persistence blocking is performed.
