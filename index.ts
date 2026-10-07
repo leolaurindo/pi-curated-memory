@@ -5,6 +5,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { configureExclusion } from "./src/project.ts";
+import { runMemoryCommand } from "./src/commands.ts";
 import { openMemory } from "./src/runtime.ts";
 import { search } from "./src/search.ts";
 
@@ -81,7 +82,7 @@ export default function memoryExtension(pi: ExtensionAPI) {
       const { store, project } = await openMemory(ctx.cwd);
       const scopes = params.scope === "local" ? ["local"] as const : params.scope === "global" ? ["global"] as const : ["local", "global"] as const;
       const listings = await Promise.all(scopes.map(scope => store.list(scope, project)));
-      const entries = search(listings.flatMap(list => list.entries), params.query, params.limit ?? 5);
+      const entries = search(listings.flatMap(list => list.entries), params.query, Math.min(10, params.limit ?? 5));
       const results = entries.map(({ memory, scope, path }) => ({
         id: memory.id, scope: scope as "local" | "global", title: memory.title, description: memory.description,
         body: memory.body.slice(0, 2_000), path, bodyTruncated: memory.body.length > 2_000,
@@ -96,6 +97,22 @@ export default function memoryExtension(pi: ExtensionAPI) {
         content: [{ type: "text", text: truncated.content + (truncated.truncated ? "\n[Output truncated. Narrow the query; full memory paths are included in results.]" : "") }],
         details: data, structuredContent: data,
       };
+    },
+  });
+
+  pi.registerCommand("memory", {
+    description: "Review candidates, manage approved memories, or show storage status",
+    handler: async (args, ctx) => {
+      try {
+        const message = await track(() => runMemoryCommand(args, ctx));
+        if (message) {
+          if (ctx.hasUI) ctx.ui.notify(message, "info");
+          else pi.sendMessage({ customType: "memory-status", content: message, display: true, details: undefined });
+        }
+      } catch (error) {
+        if (ctx.hasUI) ctx.ui.notify(`Memory: ${(error as Error).message}`, "error");
+        else pi.sendMessage({ customType: "memory-status", content: `Memory: ${(error as Error).message}`, display: true, details: undefined });
+      }
     },
   });
 

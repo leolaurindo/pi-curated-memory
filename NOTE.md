@@ -117,6 +117,10 @@ Suggested sequence:
 - Small prompt guidance uses Pi's native tool `promptGuidelines`, rather than replacing the system prompt. Candidate tool rendering and notifications do not expose the proposed text.
 - Startup notices count pending and skipped candidates; orderly shutdown waits for in-flight writing-tool operations.
 - Verification: `npm run check` and 13 tests pass, including loading the actual extension through Pi's extension loader and invoking both tools.
+- Review/manage/status commands implemented with built-in dialogs, explicit deletion confirmation, pending/skipped separation, separate approved scopes, and promotion/demotion to the current project.
+- External editing launches `$VISUAL` or `$EDITOR` safely with arguments, suspends/restores Pi's terminal, and edits a temporary draft. Valid changes are atomically applied; invalid/conflicting drafts are retained with a recovery path and the original remains unchanged. Protected lifecycle metadata is not editable through this action.
+- Review/manage require TUI mode; status is available without a TUI. Editor commands require `$VISUAL` or `$EDITOR` and do not accept shell pipelines.
+- Verification: `npm run check` and 19 tests pass. Dialog tests use scripted UI fixtures with real stores; editor tests launch real subprocesses, but an actual interactive terminal session is not yet verified.
 
 Update this section as implementation progresses. Record important deviations and verification evidence.
 

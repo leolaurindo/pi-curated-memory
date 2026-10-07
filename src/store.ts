@@ -153,7 +153,11 @@ export class MemoryStore {
     let target = currentProject;
     if (scope === "local" && entry.scope === "candidate") {
       // Resolve the recorded destination, never substitute the reviewer's cwd.
-      target = await resolveProject(entry.memory.projectRoot!);
+      try { target = await resolveProject(entry.memory.projectRoot!); }
+      catch (error) {
+        if (!isMissing(error)) throw error;
+        throw new Error(`Candidate project is unavailable: ${entry.memory.projectRoot}. Keep it queued or approve globally.`);
+      }
       if (target.root !== entry.memory.projectRoot) throw new Error("Candidate destination changed. Keep it queued or approve globally.");
     }
     if (scope === "local") await configureExclusion(target, this.config.gitExclude);

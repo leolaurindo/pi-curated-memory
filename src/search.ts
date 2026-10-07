@@ -18,5 +18,5 @@ export function search(entries: Entry[], query: string, limit = 5): Entry[] {
     return { entry, score };
   }).filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score || a.entry.memory.id.localeCompare(b.entry.memory.id))
-    .slice(0, Math.max(0, Math.min(10, limit))).map(item => item.entry);
+    .slice(0, Math.max(0, limit)).map(item => item.entry);
 }
