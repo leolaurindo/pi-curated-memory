@@ -113,6 +113,10 @@ Suggested sequence:
 - Candidates retain only their intended local destination; approved globals have no origin metadata.
 - Verification: `npm run check` and 10 storage/project tests pass, including real Git worktrees and concurrent writes from separate Node processes.
 - Config defaults honor `PI_CODING_AGENT_DIR` when set; otherwise use `~/.pi/agent`. Relative storage overrides resolve from that agent directory.
+- Tools implemented: `memory_write` persists unapproved candidates and suppresses exact duplicates; `recall` searches only approved stores, ranks metadata above body matches, deduplicates IDs, and bounds returned text.
+- Small prompt guidance uses Pi's native tool `promptGuidelines`, rather than replacing the system prompt. Candidate tool rendering and notifications do not expose the proposed text.
+- Startup notices count pending and skipped candidates; orderly shutdown waits for in-flight writing-tool operations.
+- Verification: `npm run check` and 13 tests pass, including loading the actual extension through Pi's extension loader and invoking both tools.
 
 Update this section as implementation progresses. Record important deviations and verification evidence.
 
