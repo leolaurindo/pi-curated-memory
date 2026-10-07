@@ -106,7 +106,6 @@ export class MemoryStore {
     const directory = this.directory("candidate", project);
     return withLocks([directory], async () => {
       const candidates = await this.list("candidate", project);
-      if (candidates.warnings.length) throw new Error(candidates.warnings.join("\n"));
       const local = await this.list("local", project), global = await this.list("global", project);
       const duplicate = [...candidates.entries.filter(entry => entry.memory.projectRoot === project.root), ...local.entries, ...global.entries]
         .find(entry => fingerprint(entry.memory) === fingerprint(memory));

@@ -122,6 +122,7 @@ Suggested sequence:
 - Review/manage require TUI mode; status is available without a TUI. Editor commands require `$VISUAL` or `$EDITOR` and do not accept shell pipelines.
 - Verification: `npm run check` and 19 tests pass. Dialog tests use scripted UI fixtures with real stores; editor tests launch real subprocesses.
 - Worktree hardening: missing/broken Git metadata now fails explicitly rather than silently treating a linked worktree as an independent non-Git project. Its regression test was observed failing before the fix and passing afterward.
+- Malformed candidates are reported/skipped without blocking new candidate capture. The regression test was observed failing before removing that unnecessary write-time block and passing afterward. Missing candidate destinations retain their candidate and still permit global approval.
 
 Update this section as implementation progresses. Record important deviations and verification evidence.
 

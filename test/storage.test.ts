@@ -63,6 +63,18 @@ test("promotion drops origin and demotion targets the current project", async t 
   assert.equal((await store.list("local", target)).entries.length, 0);
 });
 
+test("missing candidate destinations retain the candidate but do not prevent global approval", async t => {
+  const { root, store, project } = await fixture(t);
+  const missingProject = { ...project, root: join(root, "unmounted-project"), localDir: join(root, "unmounted-project", ".pi", "agent", "memory") };
+  const { entry } = await store.queue(draft, missingProject);
+  await assert.rejects(store.move(entry, "local", project), /Candidate project is unavailable/);
+  assert.equal((await store.list("candidate", project)).entries.length, 1);
+  await store.move(entry, "global", project);
+  const approved = (await store.list("global", project)).entries[0].memory;
+  assert.equal(approved.body, draft.body);
+  assert.equal(approved.projectRoot, undefined);
+});
+
 test("invalid or conflicting external edits cannot overwrite a memory", async t => {
   const { store, project } = await fixture(t);
   const { entry } = await store.queue(draft, project);
@@ -98,7 +110,10 @@ test("corrupt records are reported without hiding valid memories", async t => {
   assert.equal(listing.entries.length, 1);
   assert.equal(listing.warnings.length, 1);
   assert.match(listing.warnings[0], /bad\.md/);
-  await assert.rejects(store.queue({ ...draft, body: "A second candidate" }, project), /bad\.md/);
+  await store.queue({ ...draft, body: "A second candidate" }, project);
+  const after = await store.list("candidate", project);
+  assert.equal(after.entries.length, 2);
+  assert.equal(after.warnings.length, 1);
 });
 
 test("separate processes serialize candidate writes and suppress exact duplicates", async t => {
