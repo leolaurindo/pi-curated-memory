@@ -51,7 +51,25 @@ test("Pi loads the extension; tools persist candidates, recall only approved dat
   assert.equal(data.results[0].path, (await store.list("local", project)).entries[0].path);
   await assert.rejects(recall.execute("blank", { query: " " }, undefined, undefined, ctx), /must not be blank/);
 
+  const long = await store.queue({ title: "Verbose memory", description: "Output size contract", body: "x".repeat(5_000) }, project);
+  await store.move(long.entry, "global", project);
+  const bounded = await recall.execute("bounded", { query: "verbose", scope: "global" }, undefined, undefined, ctx);
+  const boundedData = bounded.structuredContent as unknown as { results: { body: string; bodyTruncated: boolean; scope: string }[] };
+  assert.equal(boundedData.results.length, 1);
+  assert.equal(boundedData.results[0].body.length, 2_000);
+  assert.equal(boundedData.results[0].bodyTruncated, true);
+  assert.equal(boundedData.results[0].scope, "global");
+
   const before = notifications.length;
+  await assert.rejects(write.execute("invalid", { ...draft, body: " " }, undefined, undefined, ctx), /body must be nonempty/);
+  assert.equal(notifications.length, before);
+  assert.equal((await store.list("candidate", project)).entries.length, 0);
+  const blocked = join(root, "blocked-memory");
+  await writeFile(blocked, "not a directory");
+  await writeFile(join(root, "memory.json"), JSON.stringify({ globalRoot: blocked }));
+  await assert.rejects(write.execute("failed-write", draft, undefined, undefined, ctx), /ENOTDIR/);
+  assert.equal(notifications.length, before);
+  await writeFile(join(root, "memory.json"), JSON.stringify({ globalRoot: config.globalRoot }));
   const duplicate = await write.execute("duplicate", draft, undefined, undefined, ctx);
   assert.equal((duplicate.structuredContent as { duplicate: boolean }).duplicate, true);
   assert.equal(notifications.length, before);

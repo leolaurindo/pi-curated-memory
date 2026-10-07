@@ -100,7 +100,7 @@ Allow ephemeral storage; do not detect containers, inspect mounts, or block capt
 
 Implementation is authorized. Make focused commits per feature so the history is easy to follow.
 
-Suggested sequence:
+Feature sequence (implemented):
 1. Storage/configuration, Markdown records, Git/worktree resolution, locking, and lifecycle tests.
 2. Writing/recall tools, bounded retrieval, startup notices, and small prompt guidance.
 3. Review/manage/status commands and external editor integration.
@@ -124,7 +124,20 @@ Suggested sequence:
 - Worktree hardening: missing/broken Git metadata now fails explicitly rather than silently treating a linked worktree as an independent non-Git project. Its regression test was observed failing before the fix and passing afterward.
 - Malformed candidates are reported/skipped without blocking new candidate capture. The regression test was observed failing before removing that unnecessary write-time block and passing afterward. Missing candidate destinations retain their candidate and still permit global approval.
 
-Update this section as implementation progresses. Record important deviations and verification evidence.
+### V1 verification and remaining boundaries
+
+- `npm run check`: passed.
+- `npm test`: all 21 tests passed. Coverage includes bounded recall text and failed writes producing no success notice.
+- `npm pack --dry-run`: passed; the package includes the extension, source modules, and README, not inspiration/test fixtures.
+- Native Pi TUI smoke check passed in an isolated pseudo-terminal: startup notice, candidate review, actual external editor launch/reload, local approval, status, and orderly exit. No model request or real-user configuration changes were needed.
+- Current size: 689 production TypeScript lines; 462 test/helper lines (including blank lines).
+- Usage/configuration and reliability boundaries are documented in `README.md`.
+- Candidate destinations are absolute paths: host/container local approval requires that project path to be accessible. There is no automatic host/container translation. Approved global memories have no such origin dependency.
+- Initial runtime is verified on Linux; macOS/Windows and an actual Docker deployment are not verified. The plain-file storage itself remains portable.
+- Locking coordinates plugin mutations, not arbitrary external writers. Cross-store moves are copy-before-delete and retryable, not a single cross-filesystem transaction; temporary duplicates are deduplicated during recall.
+- No separate extraction worker was built: the accepted writing-tool design replaces it. Built-in dialogs replace a bespoke flash-card component. External edits use validated temporary drafts rather than exposing the authoritative file to incomplete editor saves.
+
+Update this section with important design changes and verification evidence as work continues.
 
 ## Alternatives rejected
 
