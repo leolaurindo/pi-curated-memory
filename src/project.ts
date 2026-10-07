@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { readFile, realpath, stat } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { atomicWrite, isMissing, withLocks } from "./files.ts";
 
 const exec = promisify(execFile);
@@ -17,7 +17,7 @@ const endMarker = "# my-pi-memory: end";
 const block = `${marker}\n/.pi/agent/memory/\n${endMarker}\n`;
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
-  return (await exec("git", args, { cwd, timeout: 5_000, maxBuffer: 1024 * 1024 })).stdout;
+  return (await exec("git", args, { cwd, env: { ...process.env, LC_ALL: "C" }, timeout: 5_000, maxBuffer: 1024 * 1024 })).stdout;
 }
 
 export async function resolveProject(cwd: string): Promise<Project> {
@@ -26,7 +26,9 @@ export async function resolveProject(cwd: string): Promise<Project> {
     await git(cwd, "rev-parse", "--show-toplevel");
   } catch (error) {
     const stderr = String((error as { stderr?: string }).stderr ?? "");
-    if (!isMissing(error) && !stderr.includes("not a git repository")) throw error;
+    if (!stderr.includes("not a git repository (or any of the parent directories)")) {
+      throw new Error(`Cannot resolve Git memory scope: ${stderr.trim() || (error as Error).message}. Ensure Git and the repository metadata are accessible.`);
+    }
     return { root: cwd, localDir: join(cwd, ".pi", "agent", "memory"), git: false, available: true };
   }
   // Git lists the main worktree first, even when invoked from a linked worktree.

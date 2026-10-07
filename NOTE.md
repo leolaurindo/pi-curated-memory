@@ -120,7 +120,8 @@ Suggested sequence:
 - Review/manage/status commands implemented with built-in dialogs, explicit deletion confirmation, pending/skipped separation, separate approved scopes, and promotion/demotion to the current project.
 - External editing launches `$VISUAL` or `$EDITOR` safely with arguments, suspends/restores Pi's terminal, and edits a temporary draft. Valid changes are atomically applied; invalid/conflicting drafts are retained with a recovery path and the original remains unchanged. Protected lifecycle metadata is not editable through this action.
 - Review/manage require TUI mode; status is available without a TUI. Editor commands require `$VISUAL` or `$EDITOR` and do not accept shell pipelines.
-- Verification: `npm run check` and 19 tests pass. Dialog tests use scripted UI fixtures with real stores; editor tests launch real subprocesses, but an actual interactive terminal session is not yet verified.
+- Verification: `npm run check` and 19 tests pass. Dialog tests use scripted UI fixtures with real stores; editor tests launch real subprocesses.
+- Worktree hardening: missing/broken Git metadata now fails explicitly rather than silently treating a linked worktree as an independent non-Git project. Its regression test was observed failing before the fix and passing afterward.
 
 Update this section as implementation progresses. Record important deviations and verification evidence.
 

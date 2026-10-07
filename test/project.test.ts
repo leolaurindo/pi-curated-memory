@@ -36,6 +36,12 @@ test("Git exclusion is idempotent, preference-controlled, and preserves user ent
   await assert.rejects(readFile(join(cwd, ".gitignore")), { code: "ENOENT" });
 });
 
+test("broken worktree Git metadata never silently creates an independent local scope", async t => {
+  const { cwd } = await fixture(t);
+  await writeFile(join(cwd, ".git"), "gitdir: /unmounted/main/.git/worktrees/linked\n");
+  await assert.rejects(resolveProject(cwd), /Cannot resolve Git memory scope/);
+});
+
 test("non-Git directories use cwd and exclusion is a no-op", async t => {
   const { project } = await fixture(t);
   assert.equal(project.git, false);
