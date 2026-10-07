@@ -106,6 +106,14 @@ Suggested sequence:
 3. Review/manage/status commands and external editor integration.
 4. Documentation and end-to-end validation.
 
+### Progress
+
+- Storage foundation implemented: global `memory.json` config, YAML-header Markdown records, durable atomic writes, directory-level cross-process locks, exact duplicate suppression, safe edits/deletes, and retryable copy-before-delete moves.
+- Git/worktree resolution uses the main worktree's local store. Git exclusion is preference-controlled and preserves user entries.
+- Candidates retain only their intended local destination; approved globals have no origin metadata.
+- Verification: `npm run check` and 10 storage/project tests pass, including real Git worktrees and concurrent writes from separate Node processes.
+- Config defaults honor `PI_CODING_AGENT_DIR` when set; otherwise use `~/.pi/agent`. Relative storage overrides resolve from that agent directory.
+
 Update this section as implementation progresses. Record important deviations and verification evidence.
 
 ## Alternatives rejected
