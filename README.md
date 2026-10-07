@@ -1,5 +1,12 @@
 # My Pi Memory
 
+> This is 100% vibe-coded and still under experimentation.
+> In fact, the only part I read is this block that I am writing.
+> Use at your own account. If you like and you're reading this message, fork because I may delete this if I don't like using it.
+> not on npm yet.
+> ~ Leo
+
+
 User-reviewed project memories and global preferences for Pi. Two model tools propose and recall memories; only you approve them.
 
 ## Try it
