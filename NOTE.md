@@ -41,9 +41,7 @@ Provide exactly two model-facing tools:
 - `memory_write`: propose a candidate, optionally suggesting local/global scope. It never approves a memory.
 - `recall`: search approved local and global memories, never candidates.
 
-Use a very small system instruction:
-
-> Use `recall` for project memories and user preferences when relevant. Use `memory_write` to propose durable project knowledge or user preferences, especially when the user explicitly asks you to remember something or corrects you. Writing queues a candidate for user review; it does not approve it.
+Keep the `memory_write` prompt guidance small and focused: propose durable project knowledge or user preferences likely to help in future sessions, even without an explicit request to remember them; avoid one-off details, uncertain inferences, and information already represented. Writing queues a candidate for user review; it never approves it. Keep recall guidance separate: use `recall` for project memories and user preferences when relevant.
 
 - The writing tool replaces a separate background model extractor. No extra model calls or extraction worker are needed.
 - Persist candidates with asynchronous filesystem operations during the tool call; user review remains deferred. This deliberately replaces the initial idea of a fully background extraction/storage queue with a simpler durable tool call.
@@ -84,7 +82,7 @@ Use built-in Pi dialogs first, rather than a bespoke terminal UI.
 - On startup, show an unobtrusive notice only when candidates exist:
   > There are 12 memory candidates. Type `/memory review` to see them.
 - Count pending and skipped candidates in the notice; review can expose the skipped count/filter.
-- External editing uses `$VISUAL`, then `$EDITOR`; wait for exit and reload/validate the edited file.
+- External editing uses `$EDITOR`, falling back to `$VISUAL`; wait for exit and reload/validate the edited file.
 - Forget/delete permanently removes the file after confirmation. No elaborate history/undo system in v1.
 - Escape closes an interaction without approving anything.
 - Approval, promotion, demotion, and deletion are user commands/actions, not model tools. Never approve globally without an explicit user action.
@@ -127,12 +125,12 @@ Feature sequence (implemented):
 - Verification: `npm run check` and 10 storage/project tests pass, including real Git worktrees and concurrent writes from separate Node processes.
 - Config defaults honor `PI_CODING_AGENT_DIR` when set; otherwise use `~/.pi/agent`. Relative storage overrides resolve from that agent directory.
 - Tools implemented: `memory_write` persists unapproved candidates and suppresses exact duplicates; `recall` searches only approved stores, ranks metadata above body matches, deduplicates IDs, and bounds returned text.
-- Small prompt guidance uses Pi's native tool `promptGuidelines`, rather than replacing the system prompt. Candidate tool rendering and notifications do not expose the proposed text.
+- Prompt guidance uses Pi's native tool `promptGuidelines`, loaded from `prompts/memory-write-guidelines.txt` rather than embedded in JavaScript or replacing the system prompt. Candidate tool rendering and notifications do not expose the proposed text.
 - Startup notices count pending and skipped candidates; orderly shutdown waits for in-flight writing-tool operations.
 - Verification: `npm run check` and 13 tests pass, including loading the actual extension through Pi's extension loader and invoking both tools.
 - Review/manage/status commands implemented with built-in dialogs, explicit deletion confirmation, pending/skipped separation, separate approved scopes, and promotion/demotion to the current project.
-- External editing launches `$VISUAL` or `$EDITOR` safely with arguments, suspends/restores Pi's terminal, and edits a temporary draft. Valid changes are atomically applied; invalid/conflicting drafts are retained with a recovery path and the original remains unchanged. Protected lifecycle metadata is not editable through this action.
-- Review/manage require TUI mode; status is available without a TUI. Editor commands require `$VISUAL` or `$EDITOR` and do not accept shell pipelines.
+- External editing launches `$EDITOR` or the fallback `$VISUAL` safely with arguments, suspends/restores Pi's terminal, and edits a temporary draft. Valid changes are atomically applied; invalid/conflicting drafts are retained with a recovery path and the original remains unchanged. Protected lifecycle metadata is not editable through this action.
+- Review/manage require TUI mode; status is available without a TUI. Editor commands require `$EDITOR` or `$VISUAL` and do not accept shell pipelines.
 - Verification: `npm run check` and 19 tests pass. Dialog tests use scripted UI fixtures with real stores; editor tests launch real subprocesses.
 - Worktree hardening: missing/broken Git metadata now fails explicitly rather than silently treating a linked worktree as an independent non-Git project. Its regression test was observed failing before the fix and passing afterward.
 - Malformed candidates are reported/skipped without blocking new candidate capture. The regression test was observed failing before removing that unnecessary write-time block and passing afterward. Missing candidate destinations retain their candidate and still permit global approval.

@@ -19,7 +19,8 @@ test("Pi loads the extension; tools persist candidates, recall only approved dat
   const ctx = { cwd, hasUI: true, mode: "tui", ui: { notify: (message: string) => notifications.push(message) } } as unknown as ExtensionToolContext;
   const write = extension.tools.get("memory_write")!.definition;
   const recall = extension.tools.get("recall")!.definition;
-  assert.match(write.promptGuidelines!.join(" "), /does not approve/);
+  assert.match(write.promptGuidelines!.join(" "), /even when the user has not explicitly asked/);
+  assert.match(write.promptGuidelines!.join(" "), /never approves/);
   assert.match(recall.promptGuidelines!.join(" "), /user preferences/);
   const startup = extension.handlers.get("session_start")![0];
   await startup({ type: "session_start" }, ctx);

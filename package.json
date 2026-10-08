@@ -10,6 +10,7 @@
   "files": [
     "index.ts",
     "src",
+    "prompts",
     "README.md"
   ],
   "pi": {

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { Type } from "typebox";
 import { StringEnum } from "@earendil-works/pi-ai";
 import {
@@ -9,6 +10,8 @@ import { runMemoryCommand } from "./src/commands.ts";
 import { openMemory } from "./src/runtime.ts";
 import { search } from "./src/search.ts";
 import { recordAccess } from "./src/usage.ts";
+
+const memoryWriteGuidelines = readFileSync(new URL("./prompts/memory-write-guidelines.txt", import.meta.url), "utf8").trim();
 
 export default function memoryExtension(pi: ExtensionAPI) {
   const pending = new Set<Promise<unknown>>();
@@ -24,9 +27,7 @@ export default function memoryExtension(pi: ExtensionAPI) {
     label: "Memory candidate",
     description: "Queue durable project knowledge or user preferences for user review. Never approves memory. Do not store credentials, speculation, or temporary task details.",
     promptSnippet: "Propose a memory candidate for user review",
-    promptGuidelines: [
-      "Use memory_write to propose durable project knowledge or user preferences, especially when the user asks you to remember something or corrects you. Writing queues a candidate; it does not approve it.",
-    ],
+    promptGuidelines: [memoryWriteGuidelines],
     parameters: Type.Object({
       title: Type.String({ minLength: 1, maxLength: 200 }),
       description: Type.String({ minLength: 1, maxLength: 500 }),

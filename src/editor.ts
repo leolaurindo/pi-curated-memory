@@ -9,11 +9,11 @@ import type { Entry, MemoryStore } from "./store.ts";
 
 /** Interpret editor arguments without executing shell operators or interpolating the filename. */
 export async function editMemory(entry: Entry, store: MemoryStore, ctx: ExtensionCommandContext): Promise<void> {
-  const command = process.env.VISUAL?.trim() || process.env.EDITOR?.trim();
-  if (!command) throw new Error("Set $VISUAL or $EDITOR to edit memory files.");
+  const command = process.env.EDITOR?.trim() || process.env.VISUAL?.trim();
+  if (!command) throw new Error("Set $EDITOR or $VISUAL to edit memory files.");
   const arguments_ = parse(command, name => process.env[name] ?? "");
   if (!arguments_.length || arguments_.some(argument => typeof argument !== "string")) {
-    throw new Error("$VISUAL/$EDITOR must be an executable with arguments, not a shell pipeline.");
+    throw new Error("$EDITOR/$VISUAL must be an executable with arguments, not a shell pipeline.");
   }
   const [executable, ...args] = arguments_ as string[];
   const directory = await mkdtemp(join(tmpdir(), "pi-memory-edit-"));

@@ -43,15 +43,15 @@ On startup, a nonzero candidate count produces a short notice pointing to `/memo
 
 ### External editor
 
-Choose **Edit in $EDITOR** while reviewing or managing. The plugin prefers `$VISUAL`, then `$EDITOR`, and suspends Pi's terminal while the editor runs.
+Choose **Edit in $EDITOR** while reviewing or managing. The plugin uses `$EDITOR`, falling back to `$VISUAL` only when `$EDITOR` is unset or blank, and suspends Pi's terminal while the editor runs.
 
 ```sh
 export EDITOR='nvim'
-# GUI editors must wait until editing finishes:
-export VISUAL='code --wait'
+# For GUI editors, use a wait flag, e.g.:
+# export EDITOR='code --wait'
 ```
 
-Executable arguments and quoted paths work; shell pipelines/operators do not. Set one of these variables before launching Pi.
+Executable arguments and quoted paths work; shell pipelines/operators do not. Set `$EDITOR` (or `$VISUAL` as a fallback) before launching Pi.
 
 Editing uses a temporary draft. On successful exit, validated changes replace the original atomically. Invalid metadata, failed editors, or concurrent changes leave the original untouched and report the saved draft's recovery path. You may edit the title, description, and Markdown body, but not IDs or lifecycle metadata.
 
