@@ -115,7 +115,7 @@ Git metadata and the main store must be accessible. A broken/unmounted Git metad
 ## Tools
 
 - `memory_write({ title, description, body, scope? })`: durably save an unapproved candidate. `scope` is only a suggestion (`local` or `global`). Exact duplicates in the project's candidates/local memories or global approved memories are suppressed.
-- `recall({ query, scope?, limit? })`: search approved memories. Scope defaults to `both`; limit defaults to 5 and is capped at 10. Titles rank above descriptions and body text. Matching ignores case and accents.
+- `recall_memory({ query, scope?, limit? })`: search approved memories. Scope defaults to `both`; limit defaults to 5 and is capped at 10. Titles rank above descriptions and body text. Matching ignores case and accents.
 
 Recall labels scopes, deduplicates IDs, and returns at most 2,000 characters of each memory body plus its full path. Model-facing text is further bounded to 16 KB/300 lines; use a narrower query or read the returned approved file for full text. Candidates are never returned.
 

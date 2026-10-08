@@ -18,7 +18,7 @@ test("Pi loads the extension; tools persist candidates, recall only approved dat
   const notifications: string[] = [];
   const ctx = { cwd, hasUI: true, mode: "tui", ui: { notify: (message: string) => notifications.push(message) } } as unknown as ExtensionToolContext;
   const write = extension.tools.get("memory_write")!.definition;
-  const recall = extension.tools.get("recall")!.definition;
+  const recall = extension.tools.get("recall_memory")!.definition;
   assert.match(write.promptGuidelines!.join(" "), /even when the user has not explicitly asked/);
   assert.match(write.promptGuidelines!.join(" "), /never approves/);
   assert.match(recall.promptGuidelines!.join(" "), /user preferences/);

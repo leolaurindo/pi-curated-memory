@@ -17,7 +17,7 @@ async function setup(t: TestContext) {
   const extension = loaded.extensions.find(extension => extension.resolvedPath === resolve("index.ts"))!;
   const notifications: string[] = [];
   const ctx = { cwd: setup.cwd, hasUI: true, mode: "tui", ui: { notify: (message: string) => notifications.push(message) } } as unknown as ExtensionToolContext;
-  return { ...setup, recall: extension.tools.get("recall")!.definition, ctx, notifications };
+  return { ...setup, recall: extension.tools.get("recall_memory")!.definition, ctx, notifications };
 }
 
 test("recall counts only returned memories after limits/dedup and preserves usage through promotion", async t => {

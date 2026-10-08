@@ -39,9 +39,9 @@ Use readable Markdown files with a small metadata header, not SQLite. Users can 
 Provide exactly two model-facing tools:
 
 - `memory_write`: propose a candidate, optionally suggesting local/global scope. It never approves a memory.
-- `recall`: search approved local and global memories, never candidates.
+- `recall_memory`: search approved local and global memories, never candidates.
 
-Keep the `memory_write` prompt guidance small and focused: propose durable project knowledge or user preferences likely to help in future sessions, even without an explicit request to remember them; avoid one-off details, uncertain inferences, and information already represented. Writing queues a candidate for user review; it never approves it. Keep recall guidance separate: use `recall` for project memories and user preferences when relevant.
+Keep the `memory_write` prompt guidance small and focused: propose durable project knowledge or user preferences likely to help in future sessions, even without an explicit request to remember them; avoid one-off details, uncertain inferences, and information already represented. Writing queues a candidate for user review; it never approves it. Keep recall guidance separate: use `recall_memory` for project memories and user preferences when relevant.
 
 - The writing tool replaces a separate background model extractor. No extra model calls or extraction worker are needed.
 - Persist candidates with asynchronous filesystem operations during the tool call; user review remains deferred. This deliberately replaces the initial idea of a fully background extraction/storage queue with a simpler durable tool call.
@@ -124,7 +124,7 @@ Feature sequence (implemented):
 - Candidates retain only their intended local destination; approved globals have no origin metadata.
 - Verification: `npm run check` and 10 storage/project tests pass, including real Git worktrees and concurrent writes from separate Node processes.
 - Config defaults honor `PI_CODING_AGENT_DIR` when set; otherwise use `~/.pi/agent`. Relative storage overrides resolve from that agent directory.
-- Tools implemented: `memory_write` persists unapproved candidates and suppresses exact duplicates; `recall` searches only approved stores, ranks metadata above body matches, deduplicates IDs, and bounds returned text.
+- Tools implemented: `memory_write` persists unapproved candidates and suppresses exact duplicates; `recall_memory` searches only approved stores, ranks metadata above body matches, deduplicates IDs, and bounds returned text.
 - Prompt guidance uses Pi's native tool `promptGuidelines`, loaded from `prompts/memory-write-guidelines.txt` rather than embedded in JavaScript or replacing the system prompt. Candidate tool rendering and notifications do not expose the proposed text.
 - Startup notices count pending and skipped candidates; orderly shutdown waits for in-flight writing-tool operations.
 - Verification: `npm run check` and 13 tests pass, including loading the actual extension through Pi's extension loader and invoking both tools.
